@@ -33,18 +33,31 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.24'
+
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
 
       - name: Verify Go installation
         run: |
           go version
           go env
+          templ version
 
       - name: Build WASM
         run: |
-          echo "Building Go WASM project..."
-          GOOS=js GOARCH=wasm go build -o main.wasm main.go
-          cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" .
+          echo "Building Go WASM project with Templ..."
+          templ generate
+          go run generate_html.go templates_templ.go
+          GOOS=js GOARCH=wasm go build -o main.wasm main.go templates_templ.go
+          # Handle different Go versions for wasm_exec.js location
+          if [ -f "$(go env GOROOT)/misc/wasm/wasm_exec.js" ]; then
+            cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" .
+          elif [ -f "$(go env GOROOT)/lib/wasm/wasm_exec.js" ]; then
+            cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" .
+          else
+            find "$(go env GOROOT)" -name "wasm_exec.js" -type f -exec cp {} . \;
+          fi
           echo "Build complete!"
           ls -la *.wasm *.js *.html node_modules/chart.js/dist/
 

@@ -2,5 +2,10 @@
 # pixi environments
 .pixi
 *.egg-info
+
+# Generated files (don't commit)
 main.wasm
+wasm_exec.js
+templates_templ.go
+index.html
 node_modules/

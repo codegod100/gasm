@@ -1,12 +1,25 @@
 #!/bin/bash
 
-echo "Building Go WASM project..."
+echo "Building Go WASM project with Templ..."
+
+# Generate templ templates
+templ generate
+
+# Generate HTML from templates
+go run generate_html.go templates_templ.go
 
 # Build the WASM file using standard Go
-GOOS=js GOARCH=wasm go build -o main.wasm main.go
+env GOOS=js GOARCH=wasm go build -o main.wasm main.go templates_templ.go
 
-# Copy the wasm_exec.js file from Go
-cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" .
+# Copy the wasm_exec.js file from Go (detect correct path for different Go versions)
+if [ -f "$(go env GOROOT)/misc/wasm/wasm_exec.js" ]; then
+    cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" .
+elif [ -f "$(go env GOROOT)/lib/wasm/wasm_exec.js" ]; then
+    cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" .
+else
+    echo "Could not find wasm_exec.js in Go installation"
+    find "$(go env GOROOT)" -name "wasm_exec.js" -type f
+fi
 
 echo "Build complete! Open index.html in a web browser to test."
 echo "Note: You may need to serve the files over HTTP due to CORS restrictions."

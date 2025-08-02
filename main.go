@@ -17,6 +17,116 @@ var messages []Message
 var messageStats = make(map[string]int)
 var chart js.Value
 
+// HTML Element Creation Helper Functions
+func createElement(tag string) js.Value {
+	return js.Global().Get("document").Call("createElement", tag)
+}
+
+func createTextNode(text string) js.Value {
+	return js.Global().Get("document").Call("createTextNode", text)
+}
+
+func createButton(text, className string, onclick func()) js.Value {
+	button := createElement("button")
+	button.Set("textContent", text)
+	button.Set("className", className)
+
+	// Create a wrapper function for the onclick handler
+	button.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		onclick()
+		return nil
+	}))
+
+	return button
+}
+
+func createDiv(className string) js.Value {
+	div := createElement("div")
+	if className != "" {
+		div.Set("className", className)
+	}
+	return div
+}
+
+func createInput(inputType, placeholder, className string) js.Value {
+	input := createElement("input")
+	input.Set("type", inputType)
+	input.Set("placeholder", placeholder)
+	if className != "" {
+		input.Set("className", className)
+	}
+	return input
+}
+
+// Dynamic UI Component Creation
+func createUserCard(username string, messageCount int) js.Value {
+	card := createDiv("user-card")
+
+	// Create avatar (colored circle with initial)
+	avatar := createDiv("user-avatar")
+	initial := "?"
+	if len(username) > 0 {
+		initial = string(username[0])
+	}
+	avatar.Set("textContent", initial)
+
+	// Create user info
+	info := createDiv("user-info")
+
+	nameDiv := createDiv("user-name")
+	nameDiv.Set("textContent", username)
+
+	countDiv := createDiv("user-count")
+	countDiv.Set("textContent", strconv.Itoa(messageCount)+" messages")
+
+	info.Call("appendChild", nameDiv)
+	info.Call("appendChild", countDiv)
+
+	card.Call("appendChild", avatar)
+	card.Call("appendChild", info)
+
+	return card
+}
+
+func createNotification(message, notificationType string) js.Value {
+	notification := createDiv("notification notification-" + notificationType)
+
+	icon := createDiv("notification-icon")
+	switch notificationType {
+	case "success":
+		icon.Set("textContent", "✓")
+	case "error":
+		icon.Set("textContent", "✗")
+	case "info":
+		icon.Set("textContent", "ℹ")
+	default:
+		icon.Set("textContent", "!")
+	}
+
+	text := createDiv("notification-text")
+	text.Set("textContent", message)
+
+	closeBtn := createButton("×", "notification-close", func() {
+		notification.Call("remove")
+	})
+
+	notification.Call("appendChild", icon)
+	notification.Call("appendChild", text)
+	notification.Call("appendChild", closeBtn)
+
+	return notification
+}
+
+func renderTemplToString(component interface{}) string {
+	// This would work with templ components, but for now let's use a simpler approach
+	// var buf bytes.Buffer
+	// ctx := context.Background()
+	// component.Render(ctx, &buf)
+	// return buf.String()
+
+	// Fallback to manual HTML generation for now
+	return ""
+}
 func updateStatsDisplay() {
 	document := js.Global().Get("document")
 	statsText := document.Call("getElementById", "statsText")
@@ -24,18 +134,62 @@ func updateStatsDisplay() {
 		return
 	}
 
-	html := "<h3>Message Statistics</h3>"
-	html += "<p>Total Messages: " + strconv.Itoa(len(messages)) + "</p>"
+	// Clear existing content
+	statsText.Set("innerHTML", "")
 
+	// Create header
+	header := createElement("h3")
+	header.Set("textContent", "Message Statistics")
+	statsText.Call("appendChild", header)
+
+	// Create total messages display
+	totalDiv := createDiv("total-messages")
+	totalDiv.Set("textContent", "Total Messages: "+strconv.Itoa(len(messages)))
+	statsText.Call("appendChild", totalDiv)
+
+	// Create user cards container using templ-style approach
 	if len(messageStats) > 0 {
-		html += "<ul>"
-		for user, count := range messageStats {
-			html += "<li>" + user + ": " + strconv.Itoa(count) + " messages</li>"
-		}
-		html += "</ul>"
-	}
+		usersContainer := createDiv("users-container")
 
-	statsText.Set("innerHTML", html)
+		for user, count := range messageStats {
+			userCard := createTemplUserCard(user, count)
+			usersContainer.Call("appendChild", userCard)
+		}
+
+		statsText.Call("appendChild", usersContainer)
+	}
+}
+
+// Create user card using templ-inspired approach
+func createTemplUserCard(username string, messageCount int) js.Value {
+	card := createDiv("user-card")
+
+	// Create avatar
+	avatar := createDiv("user-avatar")
+	initial := "?"
+	if len(username) > 0 {
+		initial = string(username[0])
+	}
+	avatar.Set("textContent", initial)
+
+	// Create user info container
+	info := createDiv("user-info")
+
+	// Create name element
+	nameDiv := createDiv("user-name")
+	nameDiv.Set("textContent", username)
+
+	// Create count element
+	countDiv := createDiv("user-count")
+	countDiv.Set("textContent", strconv.Itoa(messageCount)+" messages")
+
+	// Assemble the card
+	info.Call("appendChild", nameDiv)
+	info.Call("appendChild", countDiv)
+	card.Call("appendChild", avatar)
+	card.Call("appendChild", info)
+
+	return card
 }
 
 func initChart() {
@@ -116,6 +270,22 @@ func updateChart() {
 	chart.Get("data").Get("datasets").Index(0).Set("data", data)
 	chart.Call("update")
 }
+func showNotification(message, notificationType string) {
+	document := js.Global().Get("document")
+	body := document.Get("body")
+
+	notification := createNotification(message, notificationType)
+	body.Call("appendChild", notification)
+
+	// Auto-remove after 3 seconds
+	js.Global().Call("setTimeout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if !notification.IsNull() {
+			notification.Call("remove")
+		}
+		return nil
+	}), 3000)
+}
+
 func toggleStats() {
 	document := js.Global().Get("document")
 	statsSection := document.Call("getElementById", "statsSection")
@@ -127,8 +297,10 @@ func toggleStats() {
 			initChart()
 		}
 		updateChart()
+		showNotification("Statistics panel opened", "info")
 	} else {
 		statsSection.Get("style").Set("display", "none")
+		showNotification("Statistics panel closed", "info")
 	}
 }
 func saveToLocalStorage() {

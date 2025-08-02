@@ -1,0 +1,26 @@
+{
+  "name": "gasm",
+  "version": "1.0.0",
+  "description": "A basic chat application built with TinyGo that compiles to WebAssembly.",
+  "main": "wasm_exec.js",
+  "scripts": {
+    "build": "GOOS=js GOARCH=wasm go build -o main.wasm main.go && cp \"$(go env GOROOT)/misc/wasm/wasm_exec.js\" .",
+    "serve": "python3 -m http.server 8000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codegod100/gasm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/codegod100/gasm/issues"
+  },
+  "homepage": "https://github.com/codegod100/gasm#readme",
+  "dependencies": {
+    "chart.js": "^4.5.0"
+  }
+}

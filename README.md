@@ -1,24 +1,31 @@
-# TinyGo WASM Chat
+# Go WASM Chat
 
-A basic chat application built with TinyGo that compiles to WebAssembly.
+A basic chat application built with Go that compiles to WebAssembly, featuring Chart.js integration for message statistics.
 
 ## Prerequisites
 
-- [TinyGo](https://tinygo.org/getting-started/install/) installed
+- [Go](https://golang.org/dl/) 1.16+ installed
+- [Node.js](https://nodejs.org/) and npm for Chart.js dependency
 - A web browser
 - A local web server (for CORS compliance)
 
 ## Building
 
-Run the build script:
+First install npm dependencies:
+
+```bash
+npm install
+```
+
+Then run the build script:
 
 ```bash
 ./build.sh
 ```
 
 This will:
-1. Compile the Go code to WebAssembly using TinyGo
-2. Copy the required `wasm_exec.js` file
+1. Compile the Go code to WebAssembly using standard Go
+2. Copy the required `wasm_exec.js` file from Go's standard library
 
 ## Running
 
@@ -32,11 +39,14 @@ Then open http://localhost:8000 in your browser.
 
 ## Features
 
-- Send messages with username
-- View message history with timestamps
+- Send messages with username and timestamps
+- View message history with localStorage persistence
 - Clear all messages
+- Interactive message statistics with Chart.js doughnut chart
+- Toggle statistics view
 - Responsive chat interface
-- Real-time message display powered by WASM
+- Real-time message display powered by Go WASM
+- Full Chart.js integration demonstrating JS library wrapping
 
 ## GitHub Pages Deployment
 
@@ -54,14 +64,15 @@ This project includes a GitHub Action that automatically builds and deploys to G
 
 You can also trigger the deployment manually:
 - Go to Actions tab in your GitHub repository
-- Select "Deploy TinyGo WASM Chat to GitHub Pages"
+- Select "Deploy Go WASM Chat to GitHub Pages"
 - Click "Run workflow"
 
 ## Files
 
-- `main.go` - TinyGo source code with chat logic
-- `index.html` - HTML page with chat UI and WASM loader
-- `build.sh` - Build script
+- `main.go` - Go source code with chat logic and Chart.js integration
+- `index.html` - HTML page with chat UI and Chart.js
+- `build.sh` - Build script for Go WASM
+- `package.json` - npm configuration with Chart.js dependency
 - `main.wasm` - Compiled WebAssembly (generated)
-- `wasm_exec.js` - TinyGo WASM runtime (copied during build)
+- `wasm_exec.js` - Go WASM runtime (copied during build)
 - `.github/workflows/deploy.yml` - GitHub Actions workflow for automatic deployment

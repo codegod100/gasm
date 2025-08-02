@@ -2,14 +2,16 @@
 
 echo "Building Go WASM project with Templ..."
 
-# Generate templ templates
-templ generate
+# Generate templ templates from separate files
+templ generate page_templates.go
+templ generate component_templates.go  
+templ generate styles_templates.go
 
 # Generate HTML from templates
-go run generate_html.go templates_templ.go
+go run generate_html.go *_templ.go
 
 # Build the WASM file using standard Go
-env GOOS=js GOARCH=wasm go build -o main.wasm main.go templates_templ.go
+env GOOS=js GOARCH=wasm go build -o main.wasm main.go *_templ.go
 
 # Copy the wasm_exec.js file from Go (detect correct path for different Go versions)
 if [ -f "$(go env GOROOT)/misc/wasm/wasm_exec.js" ]; then

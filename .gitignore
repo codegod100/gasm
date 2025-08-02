@@ -6,6 +6,6 @@
 # Generated files (don't commit)
 main.wasm
 wasm_exec.js
-templates_templ.go
+*_templ.go
 index.html
 node_modules/

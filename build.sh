@@ -23,14 +23,7 @@ if [ ! -d "node_modules" ]; then
     }
 fi
 
-# Generate Tailwind CSS
-echo "Generating Tailwind CSS..."
-npx tailwindcss build -i ./input.css -o ./output.css || {
-    echo "❌ Failed to generate Tailwind CSS"
-    exit 1
-}
-
-# Generate templ templates - FAIL HARD if this doesn't work
+# Generate templ templates FIRST - FAIL HARD if this doesn't work
 echo "Generating templ templates..."
 
 # Check if templ command exists
@@ -71,6 +64,13 @@ fi
 echo "Copying generated template files to root..."
 cp templates/*_templ.go . || {
     echo "❌ Failed to copy generated template files"
+    exit 1
+}
+
+# NOW generate Tailwind CSS after template files exist
+echo "Generating Tailwind CSS..."
+npx tailwindcss build -i ./input.css -o ./output.css || {
+    echo "❌ Failed to generate Tailwind CSS"
     exit 1
 }
 

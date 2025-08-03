@@ -5,6 +5,7 @@
 - **IMPORTANT: Run `./build.sh` after any template changes** - The build process works correctly but may appear to hang
 - **DO NOT start web servers** - Just note that user can access at http://localhost:8000 after running `python3 -m http.server 8000`
 - **DO NOT make git commits automatically** - Only commit when explicitly asked by the user
+- **DO NOT invent or guess URLs** - Only use URLs provided by the user or found in local files
 
 - localStorage functionality has been implemented to persist chat messages
 - All JavaScript logic has been moved to WASM Go code for minimal JS footprint

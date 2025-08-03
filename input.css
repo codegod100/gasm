@@ -19,6 +19,10 @@
   .notification-info {
     @apply bg-blue-100 border border-blue-300 text-blue-800;
   }
+  
+  .message-enter {
+    animation: messageSlideIn 0.3s ease-out;
+  }
 }
 
 @keyframes slideIn {
@@ -28,6 +32,17 @@
   }
   to {
     transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes messageSlideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }

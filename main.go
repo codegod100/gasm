@@ -15,6 +15,7 @@ type Message struct {
 
 var messages []Message
 var messageStats = make(map[string]int)
+var chart js.Value
 
 // HTML Element Creation Helper Functions
 func createElement(tag string) js.Value {
@@ -280,17 +281,110 @@ func toggleStats() {
 	if statsModal.Get("classList").Call("contains", "hidden").Bool() {
 		statsModal.Get("classList").Call("remove", "hidden")
 		updateStatsDisplay()
+		if chart.IsUndefined() {
+			initChart()
+		}
+		updateChart()
 		showNotification("Statistics opened", "info")
 	} else {
 		statsModal.Get("classList").Call("add", "hidden")
 		showNotification("Statistics closed", "info")
 	}
 }
-
 func closeStats() {
 	document := js.Global().Get("document")
 	statsModal := document.Call("getElementById", "statsModal")
 	statsModal.Get("classList").Call("add", "hidden")
+}
+
+func initChart() {
+	// Check if Chart.js is available
+	chartConstructor := js.Global().Get("Chart")
+	if chartConstructor.IsUndefined() {
+		return
+	}
+
+	// Get canvas element
+	canvas := js.Global().Get("document").Call("getElementById", "messageChart")
+	if canvas.IsNull() {
+		return
+	}
+
+	// Create chart using JavaScript eval
+	js.Global().Call("eval", `
+		const canvas = document.getElementById('messageChart');
+		
+		// Destroy existing chart if it exists
+		if (window.messageChart && typeof window.messageChart.destroy === 'function') {
+			window.messageChart.destroy();
+		}
+		
+		window.messageChart = new Chart(canvas.getContext('2d'), {
+			type: 'doughnut',
+			data: {
+				labels: [],
+				datasets: [{
+					data: [],
+					backgroundColor: [
+						'#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', 
+						'#EF4444', '#EC4899', '#6366F1', '#84CC16'
+					],
+					borderWidth: 2,
+					borderColor: '#ffffff'
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				cutout: '60%',
+				plugins: {
+					legend: {
+						position: 'bottom',
+						labels: {
+							padding: 20,
+							usePointStyle: true,
+							font: {
+								size: 12
+							}
+						}
+					},
+					tooltip: {
+						callbacks: {
+							label: function(context) {
+								const label = context.label || '';
+								const value = context.parsed;
+								const total = context.dataset.data.reduce((a, b) => a + b, 0);
+								const percentage = ((value / total) * 100).toFixed(1);
+								return label + ': ' + value + ' messages (' + percentage + '%)';
+							}
+						}
+					}
+				}
+			}
+		});
+	`)
+
+	chart = js.Global().Get("messageChart")
+}
+
+func updateChart() {
+	if chart.IsUndefined() {
+		return
+	}
+
+	// Build arrays for labels and data
+	labels := make([]interface{}, 0, len(messageStats))
+	data := make([]interface{}, 0, len(messageStats))
+
+	for user, count := range messageStats {
+		labels = append(labels, user)
+		data = append(data, count)
+	}
+
+	// Update chart data using JavaScript
+	chart.Get("data").Set("labels", labels)
+	chart.Get("data").Get("datasets").Index(0).Set("data", data)
+	chart.Call("update")
 }
 func saveToLocalStorage() {
 	data, err := json.Marshal(messages)
@@ -369,6 +463,7 @@ func addMessage() {
 	updateMessagesDisplay()
 	saveToLocalStorage()
 	updateStatsDisplay()
+	updateChart()
 
 	messageInput.Set("value", "")
 	messageInput.Call("focus")
@@ -380,6 +475,7 @@ func clearMessages() {
 	updateMessagesDisplay()
 	saveToLocalStorage()
 	updateStatsDisplay()
+	updateChart()
 }
 
 func updateMessagesDisplay() {
@@ -392,29 +488,80 @@ func updateMessagesDisplay() {
 	messagesElement.Set("innerHTML", "")
 
 	for _, msg := range messages {
-		messageDiv := document.Call("createElement", "div")
-		messageDiv.Set("className", "message")
-
-		userDiv := document.Call("createElement", "div")
-		userDiv.Set("className", "message-user")
-		userDiv.Set("textContent", msg.Username)
-
-		textDiv := document.Call("createElement", "div")
-		textDiv.Set("className", "message-text")
-		textDiv.Set("textContent", msg.Text)
-
-		timeDiv := document.Call("createElement", "div")
-		timeDiv.Set("className", "message-time")
-		timeDiv.Set("textContent", msg.Timestamp)
-
-		messageDiv.Call("appendChild", userDiv)
-		messageDiv.Call("appendChild", textDiv)
-		messageDiv.Call("appendChild", timeDiv)
-
+		messageDiv := createModernMessage(msg)
 		messagesElement.Call("appendChild", messageDiv)
 	}
 
 	messagesElement.Set("scrollTop", messagesElement.Get("scrollHeight"))
+}
+
+func createModernMessage(msg Message) js.Value {
+	// Main message container with animation
+	messageDiv := createDiv("flex items-start space-x-3 mb-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200 message-enter")
+
+	// User avatar
+	avatar := createUserAvatar(msg.Username)
+	messageDiv.Call("appendChild", avatar)
+
+	// Message content container
+	contentDiv := createDiv("flex-1 min-w-0")
+
+	// Header with username and timestamp
+	headerDiv := createDiv("flex items-baseline space-x-2 mb-1")
+
+	usernameDiv := createElement("span")
+	usernameDiv.Set("className", "font-semibold text-gray-900 text-sm")
+	usernameDiv.Set("textContent", msg.Username)
+
+	timestampDiv := createElement("span")
+	timestampDiv.Set("className", "text-xs text-gray-500")
+	timestampDiv.Set("textContent", msg.Timestamp)
+
+	headerDiv.Call("appendChild", usernameDiv)
+	headerDiv.Call("appendChild", timestampDiv)
+
+	// Message bubble with better styling
+	bubbleDiv := createDiv("bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow duration-200")
+
+	textDiv := createElement("p")
+	textDiv.Set("className", "text-gray-800 text-sm leading-relaxed m-0")
+	textDiv.Set("textContent", msg.Text)
+
+	bubbleDiv.Call("appendChild", textDiv)
+
+	// Assemble the message
+	contentDiv.Call("appendChild", headerDiv)
+	contentDiv.Call("appendChild", bubbleDiv)
+	messageDiv.Call("appendChild", contentDiv)
+
+	return messageDiv
+}
+func createUserAvatar(username string) js.Value {
+	avatar := createDiv("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0")
+
+	// Generate a consistent color based on username
+	colors := []string{
+		"bg-purple-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+		"bg-red-500", "bg-pink-500", "bg-indigo-500", "bg-teal-500",
+	}
+
+	// Simple hash function to pick color consistently
+	hash := 0
+	for i := 0; i < len(username); i++ {
+		hash += int(username[i])
+	}
+	colorClass := colors[hash%len(colors)]
+
+	avatar.Get("classList").Call("add", colorClass)
+
+	// Set initial
+	initial := "?"
+	if len(username) > 0 {
+		initial = string(username[0])
+	}
+	avatar.Set("textContent", initial)
+
+	return avatar
 }
 
 func addWelcomeMessage() {

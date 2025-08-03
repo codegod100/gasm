@@ -799,42 +799,8 @@ select {
   animation: slideIn 0.3s ease-out;
 }
 
-.notification-success {
-  border-width: 1px;
-  --tw-border-opacity: 1;
-  border-color: rgb(134 239 172 / var(--tw-border-opacity, 1));
-  --tw-bg-opacity: 1;
-  background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
-  --tw-text-opacity: 1;
-  color: rgb(22 101 52 / var(--tw-text-opacity, 1));
-}
-
-.notification-error {
-  border-width: 1px;
-  --tw-border-opacity: 1;
-  border-color: rgb(252 165 165 / var(--tw-border-opacity, 1));
-  --tw-bg-opacity: 1;
-  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
-  --tw-text-opacity: 1;
-  color: rgb(153 27 27 / var(--tw-text-opacity, 1));
-}
-
-.notification-info {
-  border-width: 1px;
-  --tw-border-opacity: 1;
-  border-color: rgb(147 197 253 / var(--tw-border-opacity, 1));
-  --tw-bg-opacity: 1;
-  background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
-  --tw-text-opacity: 1;
-  color: rgb(30 64 175 / var(--tw-text-opacity, 1));
-}
-
 .fixed {
   position: fixed;
-}
-
-.relative {
-  position: relative;
 }
 
 .inset-0 {
@@ -865,6 +831,10 @@ select {
 
 .mb-4 {
   margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
 }
 
 .ml-3 {
@@ -899,6 +869,10 @@ select {
   height: 1.25rem;
 }
 
+.h-64 {
+  height: 16rem;
+}
+
 .h-\[calc\(100vh-2\.5rem\)\] {
   height: calc(100vh - 2.5rem);
 }
@@ -911,12 +885,20 @@ select {
   max-height: 80vh;
 }
 
+.max-h-\[90vh\] {
+  max-height: 90vh;
+}
+
 .w-36 {
   width: 9rem;
 }
 
 .w-5 {
   width: 1.25rem;
+}
+
+.w-64 {
+  width: 16rem;
 }
 
 .w-full {
@@ -943,8 +925,8 @@ select {
   flex: none;
 }
 
-.transform {
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+.flex-shrink-0 {
+  flex-shrink: 0;
 }
 
 .cursor-pointer {
@@ -953,10 +935,6 @@ select {
 
 .flex-col {
   flex-direction: column;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
 }
 
 .items-center {
@@ -1226,14 +1204,6 @@ select {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
-.transition {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-backdrop-filter;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -1242,6 +1212,18 @@ select {
 
   to {
     transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes messageSlideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }

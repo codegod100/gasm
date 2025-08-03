@@ -1,7 +1,10 @@
 {
   "name": "gasm",
   "version": "1.0.0",
-  "description": "A Go WASM chat application with Templ templates and Tailwind CSS.",
+  "description": "A Go WASM chat application with Templ templates, Tailwind CSS, and Chart.js.",
+  "dependencies": {
+    "chart.js": "^4.5.0"
+  },
   "main": "wasm_exec.js",
   "scripts": {
     "build": "./build.sh",

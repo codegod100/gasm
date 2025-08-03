@@ -15,7 +15,6 @@ type Message struct {
 
 var messages []Message
 var messageStats = make(map[string]int)
-var chart js.Value
 
 // HTML Element Creation Helper Functions
 func createElement(tag string) js.Value {
@@ -129,140 +128,135 @@ func renderTemplToString(component interface{}) string {
 }
 func updateStatsDisplay() {
 	document := js.Global().Get("document")
-	statsText := document.Call("getElementById", "statsText")
-	if statsText.IsNull() {
+	statsContent := document.Call("getElementById", "statsContent")
+	if statsContent.IsNull() {
 		return
 	}
 
-	// Clear existing content but keep the compact layout
-	statsText.Set("innerHTML", "")
+	// Clear existing content
+	statsContent.Set("innerHTML", "")
 
-	// Create total messages display
-	totalDiv := createDiv("total-messages")
-	totalDiv.Set("textContent", "Total: "+strconv.Itoa(len(messages)))
-	statsText.Call("appendChild", totalDiv)
+	// Create overview section
+	overviewDiv := createDiv("bg-gray-50 rounded-lg p-4")
+	overviewTitle := createElement("h3")
+	overviewTitle.Set("className", "text-lg font-semibold text-gray-800 mb-3")
+	overviewTitle.Set("textContent", "Overview")
+	overviewDiv.Call("appendChild", overviewTitle)
 
-	// Create user cards container using templ-style approach
+	// Stats grid
+	statsGrid := createDiv("grid grid-cols-2 gap-4")
+
+	// Total messages
+	totalCard := createStatsCard("Total Messages", strconv.Itoa(len(messages)), "text-blue-600")
+	statsGrid.Call("appendChild", totalCard)
+
+	// Active users
+	activeUsersCard := createStatsCard("Active Users", strconv.Itoa(len(messageStats)), "text-green-600")
+	statsGrid.Call("appendChild", activeUsersCard)
+
+	overviewDiv.Call("appendChild", statsGrid)
+	statsContent.Call("appendChild", overviewDiv)
+
+	// User breakdown section
 	if len(messageStats) > 0 {
-		usersContainer := createDiv("users-container")
+		usersDiv := createDiv("bg-white rounded-lg border border-gray-200")
+		usersTitle := createElement("h3")
+		usersTitle.Set("className", "text-lg font-semibold text-gray-800 p-4 border-b border-gray-200")
+		usersTitle.Set("textContent", "User Activity")
+		usersDiv.Call("appendChild", usersTitle)
 
+		usersList := createDiv("p-4 space-y-3")
+
+		// Sort users by message count
+		type userStat struct {
+			name  string
+			count int
+		}
+		var sortedUsers []userStat
 		for user, count := range messageStats {
-			userCard := createTemplUserCard(user, count)
-			usersContainer.Call("appendChild", userCard)
+			sortedUsers = append(sortedUsers, userStat{user, count})
 		}
 
-		statsText.Call("appendChild", usersContainer)
+		// Simple bubble sort
+		for i := 0; i < len(sortedUsers); i++ {
+			for j := 0; j < len(sortedUsers)-1-i; j++ {
+				if sortedUsers[j].count < sortedUsers[j+1].count {
+					sortedUsers[j], sortedUsers[j+1] = sortedUsers[j+1], sortedUsers[j]
+				}
+			}
+		}
+
+		for _, user := range sortedUsers {
+			userCard := createModernUserCard(user.name, user.count)
+			usersList.Call("appendChild", userCard)
+		}
+
+		usersDiv.Call("appendChild", usersList)
+		statsContent.Call("appendChild", usersDiv)
 	}
 }
 
-// Create user card using templ-inspired approach
-func createTemplUserCard(username string, messageCount int) js.Value {
-	card := createDiv("user-card")
+// Create modern stats card
+func createStatsCard(title, value, colorClass string) js.Value {
+	card := createDiv("bg-white rounded-lg border border-gray-200 p-4 text-center")
+
+	valueDiv := createElement("div")
+	valueDiv.Set("className", "text-2xl font-bold "+colorClass)
+	valueDiv.Set("textContent", value)
+
+	titleDiv := createElement("div")
+	titleDiv.Set("className", "text-sm text-gray-600 mt-1")
+	titleDiv.Set("textContent", title)
+
+	card.Call("appendChild", valueDiv)
+	card.Call("appendChild", titleDiv)
+
+	return card
+}
+
+// Create modern user card
+func createModernUserCard(username string, messageCount int) js.Value {
+	card := createDiv("flex items-center justify-between p-3 bg-gray-50 rounded-lg")
+
+	// Left side with avatar and name
+	leftDiv := createDiv("flex items-center space-x-3")
 
 	// Create avatar
-	avatar := createDiv("user-avatar")
+	avatar := createDiv("w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-bold text-sm")
 	initial := "?"
 	if len(username) > 0 {
 		initial = string(username[0])
 	}
 	avatar.Set("textContent", initial)
 
-	// Create user info container
-	info := createDiv("user-info")
-
-	// Create name element
-	nameDiv := createDiv("user-name")
+	// Create name
+	nameDiv := createElement("div")
+	nameDiv.Set("className", "font-medium text-gray-800")
 	nameDiv.Set("textContent", username)
 
-	// Create count element
-	countDiv := createDiv("user-count")
-	countDiv.Set("textContent", strconv.Itoa(messageCount)+" messages")
+	leftDiv.Call("appendChild", avatar)
+	leftDiv.Call("appendChild", nameDiv)
 
-	// Assemble the card
-	info.Call("appendChild", nameDiv)
-	info.Call("appendChild", countDiv)
-	card.Call("appendChild", avatar)
-	card.Call("appendChild", info)
+	// Right side with message count
+	rightDiv := createDiv("text-right")
+
+	countDiv := createElement("div")
+	countDiv.Set("className", "text-lg font-semibold text-gray-800")
+	countDiv.Set("textContent", strconv.Itoa(messageCount))
+
+	labelDiv := createElement("div")
+	labelDiv.Set("className", "text-xs text-gray-500")
+	labelDiv.Set("textContent", "messages")
+
+	rightDiv.Call("appendChild", countDiv)
+	rightDiv.Call("appendChild", labelDiv)
+
+	card.Call("appendChild", leftDiv)
+	card.Call("appendChild", rightDiv)
 
 	return card
 }
 
-func initChart() {
-	// Check if Chart.js is available
-	chartConstructor := js.Global().Get("Chart")
-	if chartConstructor.IsUndefined() {
-		return
-	}
-
-	// Get canvas element
-	canvas := js.Global().Get("document").Call("getElementById", "messageChart")
-	if canvas.IsNull() {
-		return
-	}
-
-	// Create minimal chart using JavaScript eval
-	js.Global().Call("eval", `
-		const canvas = document.getElementById('messageChart');
-		
-		// Destroy existing chart if it exists
-		if (window.messageChart && typeof window.messageChart.destroy === 'function') {
-			window.messageChart.destroy();
-		}
-		
-		// Force canvas size
-		canvas.width = 30;
-		canvas.height = 30;
-		canvas.style.width = '30px';
-		canvas.style.height = '30px';
-		
-		window.messageChart = new Chart(canvas.getContext('2d'), {
-			type: 'doughnut',
-			data: {
-				labels: [],
-				datasets: [{
-					data: [],
-					backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'],
-					borderWidth: 0
-				}]
-			},
-			options: {
-				responsive: false,
-				maintainAspectRatio: true,
-				cutout: '60%',
-				plugins: {
-					legend: {
-						display: false
-					}
-				},
-				layout: {
-					padding: 5
-				}
-			}
-		});
-	`)
-
-	chart = js.Global().Get("messageChart")
-}
-
-func updateChart() {
-	if chart.IsUndefined() {
-		return
-	}
-
-	// Build arrays for labels and data
-	labels := make([]interface{}, 0, len(messageStats))
-	data := make([]interface{}, 0, len(messageStats))
-
-	for user, count := range messageStats {
-		labels = append(labels, user)
-		data = append(data, count)
-	}
-
-	// Update chart data using JavaScript
-	chart.Get("data").Set("labels", labels)
-	chart.Get("data").Get("datasets").Index(0).Set("data", data)
-	chart.Call("update")
-}
 func showNotification(message, notificationType string) {
 	document := js.Global().Get("document")
 	body := document.Get("body")
@@ -281,20 +275,22 @@ func showNotification(message, notificationType string) {
 
 func toggleStats() {
 	document := js.Global().Get("document")
-	statsSection := document.Call("getElementById", "statsSection")
+	statsModal := document.Call("getElementById", "statsModal")
 
-	if statsSection.Get("style").Get("display").String() == "none" {
-		statsSection.Get("style").Set("display", "block")
+	if statsModal.Get("classList").Call("contains", "hidden").Bool() {
+		statsModal.Get("classList").Call("remove", "hidden")
 		updateStatsDisplay()
-		if chart.IsUndefined() {
-			initChart()
-		}
-		updateChart()
-		showNotification("Statistics panel opened", "info")
+		showNotification("Statistics opened", "info")
 	} else {
-		statsSection.Get("style").Set("display", "none")
-		showNotification("Statistics panel closed", "info")
+		statsModal.Get("classList").Call("add", "hidden")
+		showNotification("Statistics closed", "info")
 	}
+}
+
+func closeStats() {
+	document := js.Global().Get("document")
+	statsModal := document.Call("getElementById", "statsModal")
+	statsModal.Get("classList").Call("add", "hidden")
 }
 func saveToLocalStorage() {
 	data, err := json.Marshal(messages)
@@ -373,7 +369,6 @@ func addMessage() {
 	updateMessagesDisplay()
 	saveToLocalStorage()
 	updateStatsDisplay()
-	updateChart()
 
 	messageInput.Set("value", "")
 	messageInput.Call("focus")
@@ -385,7 +380,6 @@ func clearMessages() {
 	updateMessagesDisplay()
 	saveToLocalStorage()
 	updateStatsDisplay()
-	updateChart()
 }
 
 func updateMessagesDisplay() {
@@ -451,6 +445,11 @@ func main() {
 
 	js.Global().Set("toggleStats", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		toggleStats()
+		return nil
+	}))
+
+	js.Global().Set("closeStats", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		closeStats()
 		return nil
 	}))
 

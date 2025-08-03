@@ -4,6 +4,7 @@
 - This is a Go WASM chat application
 - **IMPORTANT: Run `./build.sh` after any template changes** - The build process works correctly but may appear to hang
 - **DO NOT start web servers** - Just note that user can access at http://localhost:8000 after running `python3 -m http.server 8000`
+- **DO NOT make git commits automatically** - Only commit when explicitly asked by the user
 
 - localStorage functionality has been implemented to persist chat messages
 - All JavaScript logic has been moved to WASM Go code for minimal JS footprint
@@ -41,6 +42,12 @@
 - **Button/Input**: Basic templ components (onclick handlers managed separately in Go)
 - **Removed**: All createElement/createDiv helper functions from main.go
 - **Updated**: All dynamic UI generation now uses `renderTemplToString()` with templ components
+
+## Git Guidelines
+- **NEVER commit changes unless explicitly requested by user**
+- **Always ask before making commits** - Even for obvious fixes or improvements
+- When user asks for commits, use proper commit messages without mentioning AI assistance
+- Only push when explicitly told to do so
 
 ## Error Handling Guidelines
 - **NEVER give up on a task if there is a URL associated with an error**

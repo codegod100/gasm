@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./*.html",
-    "./*_templates.go",
+    "./templates/*_templates.go",
     "./*_templ.go",
     "./main.go"
   ],

@@ -41,31 +41,38 @@ fi
 
 # Generate templ templates from .templ files
 echo "Generating page templates..."
-templ generate -f page_templates.templ || {
+templ generate -f templates/page_templates.templ || {
     echo "❌ Failed to generate page templates"
-    echo "Check page_templates.templ for syntax errors"
+    echo "Check templates/page_templates.templ for syntax errors"
     exit 1
 }
 
 echo "Generating component templates..."
-templ generate -f component_templates.templ || {
+templ generate -f templates/component_templates.templ || {
     echo "❌ Failed to generate component templates"
-    echo "Check component_templates.templ for syntax errors"
+    echo "Check templates/component_templates.templ for syntax errors"
     exit 1
 }
 
 echo "Generating styles templates..."
-templ generate -f styles_templates.templ || {
+templ generate -f templates/styles_templates.templ || {
     echo "❌ Failed to generate styles templates"
-    echo "Check styles_templates.templ for syntax errors"
+    echo "Check templates/styles_templates.templ for syntax errors"
     exit 1
 }
 
 # Verify generated files exist
-if ! ls *_templ.go >/dev/null 2>&1; then
-    echo "❌ No *_templ.go files were generated"
+if ! ls templates/*_templ.go >/dev/null 2>&1; then
+    echo "❌ No *_templ.go files were generated in templates/"
     exit 1
 fi
+
+# Copy generated template files to root for Go compilation
+echo "Copying generated template files to root..."
+cp templates/*_templ.go . || {
+    echo "❌ Failed to copy generated template files"
+    exit 1
+}
 
 # Generate HTML from templates
 echo "Generating HTML from templates..."

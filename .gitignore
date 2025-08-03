@@ -7,6 +7,7 @@
 main.wasm
 wasm_exec.js
 *_templ.go
+templates/*_templ.go
 index.html
 output.css
 node_modules/

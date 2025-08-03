@@ -67,9 +67,12 @@ jobs:
           cp output.css deploy/
           cp main.wasm deploy/
           cp wasm_exec.js deploy/
-          cp -r node_modules/chart.js/dist/ deploy/node_modules/chart.js/
+          mkdir -p deploy/node_modules/chart.js/dist
+          cp node_modules/chart.js/dist/* deploy/node_modules/chart.js/dist/
           echo "Deployment directory contents:"
           ls -la deploy/
+          echo "Chart.js files:"
+          ls -la deploy/node_modules/chart.js/dist/
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

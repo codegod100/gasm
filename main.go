@@ -88,35 +88,6 @@ func createUserCard(username string, messageCount int) js.Value {
 	return card
 }
 
-func createNotification(message, notificationType string) js.Value {
-	notification := createDiv("notification notification-" + notificationType)
-
-	icon := createDiv("notification-icon")
-	switch notificationType {
-	case "success":
-		icon.Set("textContent", "✓")
-	case "error":
-		icon.Set("textContent", "✗")
-	case "info":
-		icon.Set("textContent", "ℹ")
-	default:
-		icon.Set("textContent", "!")
-	}
-
-	text := createDiv("notification-text")
-	text.Set("textContent", message)
-
-	closeBtn := createButton("×", "notification-close", func() {
-		notification.Call("remove")
-	})
-
-	notification.Call("appendChild", icon)
-	notification.Call("appendChild", text)
-	notification.Call("appendChild", closeBtn)
-
-	return notification
-}
-
 func renderTemplToString(component interface{}) string {
 	// This would work with templ components, but for now let's use a simpler approach
 	// var buf bytes.Buffer
@@ -138,9 +109,9 @@ func updateStatsDisplay() {
 	statsContent.Set("innerHTML", "")
 
 	// Create overview section
-	overviewDiv := createDiv("bg-gray-50 rounded-lg p-4")
+	overviewDiv := createDiv("bg-surface1 rounded-lg p-4 border border-surface2")
 	overviewTitle := createElement("h3")
-	overviewTitle.Set("className", "text-lg font-semibold text-gray-800 mb-3")
+	overviewTitle.Set("className", "text-lg font-semibold text-text mb-3")
 	overviewTitle.Set("textContent", "Overview")
 	overviewDiv.Call("appendChild", overviewTitle)
 
@@ -148,21 +119,20 @@ func updateStatsDisplay() {
 	statsGrid := createDiv("grid grid-cols-2 gap-4")
 
 	// Total messages
-	totalCard := createStatsCard("Total Messages", strconv.Itoa(len(messages)), "text-blue-600")
+	totalCard := createStatsCard("Total Messages", strconv.Itoa(len(messages)), "text-blue")
 	statsGrid.Call("appendChild", totalCard)
 
 	// Active users
-	activeUsersCard := createStatsCard("Active Users", strconv.Itoa(len(messageStats)), "text-green-600")
+	activeUsersCard := createStatsCard("Active Users", strconv.Itoa(len(messageStats)), "text-green")
 	statsGrid.Call("appendChild", activeUsersCard)
-
 	overviewDiv.Call("appendChild", statsGrid)
 	statsContent.Call("appendChild", overviewDiv)
 
 	// User breakdown section
 	if len(messageStats) > 0 {
-		usersDiv := createDiv("bg-white rounded-lg border border-gray-200")
+		usersDiv := createDiv("bg-surface1 rounded-lg border border-surface2")
 		usersTitle := createElement("h3")
-		usersTitle.Set("className", "text-lg font-semibold text-gray-800 p-4 border-b border-gray-200")
+		usersTitle.Set("className", "text-lg font-semibold text-text p-4 border-b border-surface2")
 		usersTitle.Set("textContent", "User Activity")
 		usersDiv.Call("appendChild", usersTitle)
 
@@ -199,14 +169,14 @@ func updateStatsDisplay() {
 
 // Create modern stats card
 func createStatsCard(title, value, colorClass string) js.Value {
-	card := createDiv("bg-white rounded-lg border border-gray-200 p-4 text-center")
+	card := createDiv("bg-surface1 rounded-lg border border-surface2 p-4 text-center")
 
 	valueDiv := createElement("div")
 	valueDiv.Set("className", "text-2xl font-bold "+colorClass)
 	valueDiv.Set("textContent", value)
 
 	titleDiv := createElement("div")
-	titleDiv.Set("className", "text-sm text-gray-600 mt-1")
+	titleDiv.Set("className", "text-sm text-subtext0 mt-1")
 	titleDiv.Set("textContent", title)
 
 	card.Call("appendChild", valueDiv)
@@ -217,22 +187,17 @@ func createStatsCard(title, value, colorClass string) js.Value {
 
 // Create modern user card
 func createModernUserCard(username string, messageCount int) js.Value {
-	card := createDiv("flex items-center justify-between p-3 bg-gray-50 rounded-lg")
+	card := createDiv("flex items-center justify-between p-3 bg-surface1 border border-surface2 rounded-lg hover:bg-surface2 transition-colors")
 
 	// Left side with avatar and name
 	leftDiv := createDiv("flex items-center space-x-3")
 
-	// Create avatar
-	avatar := createDiv("w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-bold text-sm")
-	initial := "?"
-	if len(username) > 0 {
-		initial = string(username[0])
-	}
-	avatar.Set("textContent", initial)
+	// Create avatar using the same function as messages
+	avatar := createUserAvatar(username)
 
 	// Create name
 	nameDiv := createElement("div")
-	nameDiv.Set("className", "font-medium text-gray-800")
+	nameDiv.Set("className", "font-medium text-text")
 	nameDiv.Set("textContent", username)
 
 	leftDiv.Call("appendChild", avatar)
@@ -242,11 +207,11 @@ func createModernUserCard(username string, messageCount int) js.Value {
 	rightDiv := createDiv("text-right")
 
 	countDiv := createElement("div")
-	countDiv.Set("className", "text-lg font-semibold text-gray-800")
+	countDiv.Set("className", "text-lg font-semibold text-text")
 	countDiv.Set("textContent", strconv.Itoa(messageCount))
 
 	labelDiv := createElement("div")
-	labelDiv.Set("className", "text-xs text-gray-500")
+	labelDiv.Set("className", "text-xs text-subtext0")
 	labelDiv.Set("textContent", "messages")
 
 	rightDiv.Call("appendChild", countDiv)
@@ -256,22 +221,6 @@ func createModernUserCard(username string, messageCount int) js.Value {
 	card.Call("appendChild", rightDiv)
 
 	return card
-}
-
-func showNotification(message, notificationType string) {
-	document := js.Global().Get("document")
-	body := document.Get("body")
-
-	notification := createNotification(message, notificationType)
-	body.Call("appendChild", notification)
-
-	// Auto-remove after 3 seconds
-	js.Global().Call("setTimeout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		if !notification.IsNull() {
-			notification.Call("remove")
-		}
-		return nil
-	}), 3000)
 }
 
 func toggleStats() {
@@ -285,10 +234,8 @@ func toggleStats() {
 			initChart()
 		}
 		updateChart()
-		showNotification("Statistics opened", "info")
 	} else {
 		statsModal.Get("classList").Call("add", "hidden")
-		showNotification("Statistics closed", "info")
 	}
 }
 func closeStats() {
@@ -496,8 +443,8 @@ func updateMessagesDisplay() {
 }
 
 func createModernMessage(msg Message) js.Value {
-	// Main message container with animation
-	messageDiv := createDiv("flex items-start space-x-3 mb-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200 message-enter")
+	// Main message container with enhanced styling
+	messageDiv := createDiv("flex items-start space-x-4 mb-6 group hover:bg-surface1/50 p-4 rounded-xl transition-all duration-300 message-enter hover:scale-[1.01] hover:shadow-lg")
 
 	// User avatar
 	avatar := createUserAvatar(msg.Username)
@@ -507,24 +454,24 @@ func createModernMessage(msg Message) js.Value {
 	contentDiv := createDiv("flex-1 min-w-0")
 
 	// Header with username and timestamp
-	headerDiv := createDiv("flex items-baseline space-x-2 mb-1")
+	headerDiv := createDiv("flex items-baseline space-x-2 mb-2")
 
 	usernameDiv := createElement("span")
-	usernameDiv.Set("className", "font-semibold text-gray-900 text-sm")
+	usernameDiv.Set("className", "font-semibold text-text text-sm")
 	usernameDiv.Set("textContent", msg.Username)
 
 	timestampDiv := createElement("span")
-	timestampDiv.Set("className", "text-xs text-gray-500")
+	timestampDiv.Set("className", "text-xs text-subtext0")
 	timestampDiv.Set("textContent", msg.Timestamp)
 
 	headerDiv.Call("appendChild", usernameDiv)
 	headerDiv.Call("appendChild", timestampDiv)
 
-	// Message bubble with better styling
-	bubbleDiv := createDiv("bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow duration-200")
+	// Message bubble with enhanced chat-like styling
+	bubbleDiv := createDiv("bg-surface0 border border-surface2 rounded-2xl px-4 py-3 shadow-lg hover:shadow-xl hover:border-overlay0 hover:bg-surface1 transition-all duration-300 relative before:absolute before:left-[-8px] before:top-4 before:w-0 before:h-0 before:border-t-8 before:border-t-transparent before:border-b-8 before:border-b-transparent before:border-r-8 before:border-r-surface0")
 
 	textDiv := createElement("p")
-	textDiv.Set("className", "text-gray-800 text-sm leading-relaxed m-0")
+	textDiv.Set("className", "text-text text-base leading-relaxed m-0 font-medium")
 	textDiv.Set("textContent", msg.Text)
 
 	bubbleDiv.Call("appendChild", textDiv)
@@ -536,13 +483,15 @@ func createModernMessage(msg Message) js.Value {
 
 	return messageDiv
 }
-func createUserAvatar(username string) js.Value {
-	avatar := createDiv("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0")
 
-	// Generate a consistent color based on username
+func createUserAvatar(username string) js.Value {
+	avatar := createDiv("w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg border-2 border-surface2 hover:scale-110 transition-transform duration-200")
+
+	// Generate a consistent Catppuccin color based on username
 	colors := []string{
-		"bg-purple-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
-		"bg-red-500", "bg-pink-500", "bg-indigo-500", "bg-teal-500",
+		"bg-mauve", "bg-blue", "bg-green", "bg-yellow",
+		"bg-red", "bg-pink", "bg-sapphire", "bg-teal",
+		"bg-peach", "bg-lavender", "bg-sky", "bg-maroon",
 	}
 
 	// Simple hash function to pick color consistently

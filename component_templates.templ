@@ -1,0 +1,65 @@
+package main
+
+import "strconv"
+
+// User card component
+templ UserCard(username string, messageCount int) {
+	<div class="flex items-center justify-between p-3 bg-surface1 border border-surface2 rounded-lg hover:bg-surface2 transition-colors">
+		<div class="flex items-center space-x-3">
+			<div class="w-8 h-8 rounded-full bg-mauve text-white flex items-center justify-center font-bold text-sm">
+				if len(username) > 0 {
+					{ string(username[0]) }
+				} else {
+					?
+				}
+			</div>
+			<div class="font-medium text-text">{ username }</div>
+		</div>
+		<div class="text-right">
+			<div class="text-lg font-semibold text-text">{ strconv.Itoa(messageCount) }</div>
+			<div class="text-xs text-subtext0">messages</div>
+		</div>
+	</div>
+}
+
+// Notification component
+templ Notification(message, notificationType string) {
+	<div class={ "notification", "notification-" + notificationType }>
+		<div class="text-lg mr-3 font-bold">
+			switch notificationType {
+				case "success":
+					✓
+				case "error":
+					✗
+				case "info":
+					ℹ
+				default:
+					!
+			}
+		</div>
+		<div class="flex-1">{ message }</div>
+		<button class="bg-none border-none text-lg cursor-pointer ml-3 p-0 w-5 h-5 flex items-center justify-center opacity-70 hover:opacity-100" onclick="this.parentElement.remove()">×</button>
+	</div>
+}
+
+// Message component
+templ MessageComponent(username, text, timestamp string) {
+	<div class="flex items-start space-x-4 mb-6 group hover:bg-surface1/50 p-4 rounded-xl transition-all duration-300 message-enter hover:scale-[1.01] hover:shadow-lg">
+		<div class="w-12 h-12 rounded-full bg-mauve text-white flex items-center justify-center font-bold shadow-lg border-2 border-surface2 hover:scale-110 transition-transform duration-200">
+			if len(username) > 0 {
+				{ string(username[0]) }
+			} else {
+				?
+			}
+		</div>
+		<div class="flex-1 min-w-0">
+			<div class="flex items-baseline space-x-2 mb-2">
+				<span class="font-semibold text-text text-sm">{ username }</span>
+				<span class="text-xs text-subtext0">{ timestamp }</span>
+			</div>
+			<div class="bg-surface0 border border-surface2 rounded-2xl px-4 py-3 shadow-lg hover:shadow-xl hover:border-overlay0 hover:bg-surface1 transition-all duration-300">
+				<p class="text-text text-base leading-relaxed m-0 font-medium">{ text }</p>
+			</div>
+		</div>
+	</div>
+}

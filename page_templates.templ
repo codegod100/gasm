@@ -1,0 +1,107 @@
+package main
+
+// Main chat page template
+templ ChatPage() {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Go WASM Chat with Templ</title>
+		@ChatStyles()
+	</head>
+	<body class="font-sans m-0 p-5 bg-base h-screen box-border">
+		@ChatContainer()
+		@StatsModal()
+		@Scripts()
+	</body>
+	</html>
+}
+
+// Main chat container
+templ ChatContainer() {
+	<div class="max-w-3xl mx-auto bg-surface0 rounded-lg shadow-xl h-[calc(100vh-2.5rem)] flex flex-col border border-surface1">
+		@ChatHeader()
+		@MessagesArea()
+		@ChatInput()
+	</div>
+}
+
+// Chat header component
+templ ChatHeader() {
+	<div class="bg-mauve text-crust p-4 rounded-t-lg text-center">
+		<h1 class="font-bold">Go WASM Chat with Templ</h1>
+	</div>
+}
+
+
+
+// Messages area
+templ MessagesArea() {
+	<div class="flex-1 p-4 overflow-y-auto border-b border-surface1 bg-mantle" id="messages"></div>
+}
+
+// Chat input area
+templ ChatInput() {
+	<div class="flex p-4 gap-2 bg-surface0">
+		<input
+			type="text"
+			id="username"
+			class="flex-none w-36 px-3 py-2 bg-surface1 border border-surface2 rounded text-base text-text placeholder-subtext0 focus:border-mauve focus:outline-none"
+			placeholder="Your name"
+			value="User"
+		/>
+		<input
+			type="text"
+			id="messageInput"
+			class="flex-1 px-3 py-2 bg-surface1 border border-surface2 rounded text-base text-text placeholder-subtext0 focus:border-mauve focus:outline-none"
+			placeholder="Type your message..."
+			onkeypress="if(event.key==='Enter') addMessage()"
+		/>
+		<button onclick="addMessage()" class="px-4 py-2 bg-green text-base border-none rounded cursor-pointer text-base hover:bg-teal transition-colors">Send</button>
+		<button onclick="clearMessages()" class="px-4 py-2 bg-red text-base border-none rounded cursor-pointer text-base hover:bg-maroon transition-colors">Clear</button>
+		<button onclick="toggleStats()" class="px-4 py-2 bg-blue text-base border-none rounded cursor-pointer text-sm hover:bg-sapphire transition-colors">Stats</button>
+	</div>
+}
+
+// New modern stats modal
+templ StatsModal() {
+	<div id="statsModal" class="fixed inset-0 bg-crust bg-opacity-80 flex items-center justify-center z-50 hidden">
+		<div class="bg-surface0 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col border border-surface1">
+			<div class="flex items-center justify-between p-6 border-b border-surface1 flex-shrink-0">
+				<h2 class="text-xl font-semibold text-text">Chat Statistics</h2>
+				<button onclick="closeStats()" class="text-subtext0 hover:text-text text-2xl font-bold transition-colors">&times;</button>
+			</div>
+			<div class="p-6 overflow-y-auto flex-1">
+				<!-- Chart Section -->
+				<div class="mb-6">
+					<h3 class="text-lg font-semibold text-text mb-4">Message Distribution</h3>
+					<div class="flex justify-center">
+						<div class="w-64 h-64">
+							<canvas id="messageChart"></canvas>
+						</div>
+					</div>
+				</div>
+				
+				<div id="statsContent" class="space-y-6">
+					<div class="text-center text-subtext0">Loading statistics...</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// Scripts section
+templ Scripts() {
+	<script src="node_modules/chart.js/dist/chart.umd.js"></script>
+	<script src="wasm_exec.js"></script>
+	<script>
+		const go = new Go();
+		WebAssembly.instantiateStreaming(
+			fetch("main.wasm"),
+			go.importObject,
+		).then((result) => {
+			go.run(result.instance);
+		});
+	</script>
+}

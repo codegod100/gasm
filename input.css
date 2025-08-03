@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .notification {
+    @apply fixed top-5 right-5 flex items-center p-4 rounded-lg shadow-lg z-50 min-w-64;
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .notification-success {
+    @apply bg-green-100 border border-green-300 text-green-800;
+  }
+  
+  .notification-error {
+    @apply bg-red-100 border border-red-300 text-red-800;
+  }
+  
+  .notification-info {
+    @apply bg-blue-100 border border-blue-300 text-blue-800;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

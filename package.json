@@ -22,5 +22,9 @@
   "homepage": "https://github.com/codegod100/gasm#readme",
   "dependencies": {
     "chart.js": "^4.5.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.0",
+    "@tailwindcss/forms": "^0.5.7"
   }
 }

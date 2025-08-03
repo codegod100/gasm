@@ -1,6 +1,16 @@
 #!/bin/bash
 
-echo "Building Go WASM project with Templ..."
+echo "Building Go WASM project with Templ and Tailwind..."
+
+# Install npm dependencies if needed
+if [ ! -d "node_modules" ]; then
+    echo "Installing npm dependencies..."
+    npm install
+fi
+
+# Generate Tailwind CSS
+echo "Generating Tailwind CSS..."
+npx tailwindcss build -i ./input.css -o ./output.css
 
 # Generate templ templates from separate files
 templ generate page_templates.go

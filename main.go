@@ -134,17 +134,12 @@ func updateStatsDisplay() {
 		return
 	}
 
-	// Clear existing content
+	// Clear existing content but keep the compact layout
 	statsText.Set("innerHTML", "")
-
-	// Create header
-	header := createElement("h3")
-	header.Set("textContent", "Message Statistics")
-	statsText.Call("appendChild", header)
 
 	// Create total messages display
 	totalDiv := createDiv("total-messages")
-	totalDiv.Set("textContent", "Total Messages: "+strconv.Itoa(len(messages)))
+	totalDiv.Set("textContent", "Total: "+strconv.Itoa(len(messages)))
 	statsText.Call("appendChild", totalDiv)
 
 	// Create user cards container using templ-style approach
@@ -205,18 +200,20 @@ func initChart() {
 		return
 	}
 
-	// Get 2D context
-	ctx := canvas.Call("getContext", "2d")
-	if ctx.IsNull() {
-		return
-	}
-
-	// Create chart using JavaScript eval to avoid Go object conversion issues
+	// Create minimal chart using JavaScript eval
 	js.Global().Call("eval", `
 		const canvas = document.getElementById('messageChart');
-		const container = canvas.parentElement;
-		canvas.width = container.clientWidth;
-		canvas.height = container.clientHeight;
+		
+		// Destroy existing chart if it exists
+		if (window.messageChart && typeof window.messageChart.destroy === 'function') {
+			window.messageChart.destroy();
+		}
+		
+		// Force canvas size
+		canvas.width = 30;
+		canvas.height = 30;
+		canvas.style.width = '30px';
+		canvas.style.height = '30px';
 		
 		window.messageChart = new Chart(canvas.getContext('2d'), {
 			type: 'doughnut',
@@ -224,25 +221,21 @@ func initChart() {
 				labels: [],
 				datasets: [{
 					data: [],
-					backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
-					borderWidth: 2,
-					borderColor: '#fff'
+					backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'],
+					borderWidth: 0
 				}]
 			},
 			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				layout: {
-					padding: 20
-				},
+				responsive: false,
+				maintainAspectRatio: true,
+				cutout: '60%',
 				plugins: {
 					legend: {
-						position: 'bottom',
-						labels: {
-							padding: 20,
-							usePointStyle: true
-						}
+						display: false
 					}
+				},
+				layout: {
+					padding: 5
 				}
 			}
 		});

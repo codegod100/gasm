@@ -807,6 +807,10 @@ select {
   position: fixed;
 }
 
+.relative {
+  position: relative;
+}
+
 .inset-0 {
   inset: 0px;
 }
@@ -833,6 +837,10 @@ select {
   margin-bottom: 0.5rem;
 }
 
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -849,12 +857,20 @@ select {
   margin-right: 0.75rem;
 }
 
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
 .box-border {
   box-sizing: border-box;
 }
 
 .flex {
   display: flex;
+}
+
+.grid {
+  display: grid;
 }
 
 .hidden {
@@ -941,6 +957,10 @@ select {
   cursor: pointer;
 }
 
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .flex-col {
   flex-direction: column;
 }
@@ -969,6 +989,10 @@ select {
   gap: 0.5rem;
 }
 
+.gap-4 {
+  gap: 1rem;
+}
+
 .space-x-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
   margin-right: calc(0.5rem * var(--tw-space-x-reverse));
@@ -985,6 +1009,12 @@ select {
   --tw-space-x-reverse: 0;
   margin-right: calc(1rem * var(--tw-space-x-reverse));
   margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
 }
 
 .space-y-6 > :not([hidden]) ~ :not([hidden]) {
@@ -1068,9 +1098,19 @@ select {
   background-color: rgb(166 227 161 / var(--tw-bg-opacity, 1));
 }
 
+.bg-lavender {
+  --tw-bg-opacity: 1;
+  background-color: rgb(180 190 254 / var(--tw-bg-opacity, 1));
+}
+
 .bg-mantle {
   --tw-bg-opacity: 1;
   background-color: rgb(24 24 37 / var(--tw-bg-opacity, 1));
+}
+
+.bg-maroon {
+  --tw-bg-opacity: 1;
+  background-color: rgb(235 160 172 / var(--tw-bg-opacity, 1));
 }
 
 .bg-mauve {
@@ -1078,9 +1118,29 @@ select {
   background-color: rgb(203 166 247 / var(--tw-bg-opacity, 1));
 }
 
+.bg-peach {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 179 135 / var(--tw-bg-opacity, 1));
+}
+
+.bg-pink {
+  --tw-bg-opacity: 1;
+  background-color: rgb(245 194 231 / var(--tw-bg-opacity, 1));
+}
+
 .bg-red {
   --tw-bg-opacity: 1;
   background-color: rgb(243 139 168 / var(--tw-bg-opacity, 1));
+}
+
+.bg-sapphire {
+  --tw-bg-opacity: 1;
+  background-color: rgb(116 199 236 / var(--tw-bg-opacity, 1));
+}
+
+.bg-sky {
+  --tw-bg-opacity: 1;
+  background-color: rgb(137 220 235 / var(--tw-bg-opacity, 1));
 }
 
 .bg-surface0 {
@@ -1091,6 +1151,16 @@ select {
 .bg-surface1 {
   --tw-bg-opacity: 1;
   background-color: rgb(69 71 90 / var(--tw-bg-opacity, 1));
+}
+
+.bg-teal {
+  --tw-bg-opacity: 1;
+  background-color: rgb(148 226 213 / var(--tw-bg-opacity, 1));
+}
+
+.bg-yellow {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 226 175 / var(--tw-bg-opacity, 1));
 }
 
 .bg-opacity-80 {
@@ -1204,9 +1274,19 @@ select {
   color: rgb(30 30 46 / var(--tw-text-opacity, 1));
 }
 
+.text-blue {
+  --tw-text-opacity: 1;
+  color: rgb(137 180 250 / var(--tw-text-opacity, 1));
+}
+
 .text-crust {
   --tw-text-opacity: 1;
   color: rgb(17 17 27 / var(--tw-text-opacity, 1));
+}
+
+.text-green {
+  --tw-text-opacity: 1;
+  color: rgb(166 227 161 / var(--tw-text-opacity, 1));
 }
 
 .text-subtext0 {
@@ -1298,6 +1378,62 @@ select {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+.before\:absolute::before {
+  content: var(--tw-content);
+  position: absolute;
+}
+
+.before\:left-\[-8px\]::before {
+  content: var(--tw-content);
+  left: -8px;
+}
+
+.before\:top-4::before {
+  content: var(--tw-content);
+  top: 1rem;
+}
+
+.before\:h-0::before {
+  content: var(--tw-content);
+  height: 0px;
+}
+
+.before\:w-0::before {
+  content: var(--tw-content);
+  width: 0px;
+}
+
+.before\:border-b-8::before {
+  content: var(--tw-content);
+  border-bottom-width: 8px;
+}
+
+.before\:border-r-8::before {
+  content: var(--tw-content);
+  border-right-width: 8px;
+}
+
+.before\:border-t-8::before {
+  content: var(--tw-content);
+  border-top-width: 8px;
+}
+
+.before\:border-b-transparent::before {
+  content: var(--tw-content);
+  border-bottom-color: transparent;
+}
+
+.before\:border-r-surface0::before {
+  content: var(--tw-content);
+  --tw-border-opacity: 1;
+  border-right-color: rgb(49 50 68 / var(--tw-border-opacity, 1));
+}
+
+.before\:border-t-transparent::before {
+  content: var(--tw-content);
+  border-top-color: transparent;
 }
 
 .hover\:scale-110:hover {

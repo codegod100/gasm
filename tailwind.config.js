@@ -3,7 +3,8 @@ module.exports = {
   content: [
     "./*.html",
     "./*_templates.go",
-    "./*_templ.go"
+    "./*_templ.go",
+    "./main.go"
   ],
   theme: {
     extend: {

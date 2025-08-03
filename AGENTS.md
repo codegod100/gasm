@@ -54,4 +54,5 @@
   3. Identify the root cause
   4. Fix the specific issue mentioned in the error
   5. Only proceed after confirming the fix works
+- **Root Cause Analysis**: Don't add workarounds, band-aids, or "explicit fixes" - identify and fix the underlying issue
 - Example: Tailwind CSS v4 syntax errors should be resolved by checking official docs, not by downgrading versions

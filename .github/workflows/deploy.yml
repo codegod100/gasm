@@ -50,15 +50,31 @@ jobs:
           chmod +x ./build.sh
           ./build.sh
           echo "Build complete!"
-          ls -la *.wasm *.js *.html node_modules/chart.js/dist/
+          echo "Listing generated files:"
+          ls -la *.wasm *.js *.html *.css node_modules/chart.js/dist/ || true
+          echo "Verifying critical files exist:"
+          test -f index.html && echo "✅ index.html exists" || echo "❌ index.html missing"
+          test -f output.css && echo "✅ output.css exists" || echo "❌ output.css missing"
+          test -f main.wasm && echo "✅ main.wasm exists" || echo "❌ main.wasm missing"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      - name: Prepare deployment directory
+        run: |
+          mkdir -p deploy
+          cp index.html deploy/
+          cp output.css deploy/
+          cp main.wasm deploy/
+          cp wasm_exec.js deploy/
+          cp -r node_modules/chart.js/dist/ deploy/node_modules/chart.js/
+          echo "Deployment directory contents:"
+          ls -la deploy/
+          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "."
+          path: "deploy"
 
   deploy:
     environment:

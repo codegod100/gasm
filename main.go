@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"strconv"
 	"syscall/js"
 	"time"
+
+	"github.com/a-h/templ"
 )
 
 type Message struct {
@@ -17,87 +21,17 @@ var messages []Message
 var messageStats = make(map[string]int)
 var chart js.Value
 
-// HTML Element Creation Helper Functions
-func createElement(tag string) js.Value {
-	return js.Global().Get("document").Call("createElement", tag)
-}
-
-func createTextNode(text string) js.Value {
-	return js.Global().Get("document").Call("createTextNode", text)
-}
-
-func createButton(text, className string, onclick func()) js.Value {
-	button := createElement("button")
-	button.Set("textContent", text)
-	button.Set("className", className)
-
-	// Create a wrapper function for the onclick handler
-	button.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		onclick()
-		return nil
-	}))
-
-	return button
-}
-
-func createDiv(className string) js.Value {
-	div := createElement("div")
-	if className != "" {
-		div.Set("className", className)
+// Helper function to render templ component to HTML string
+func renderTemplToString(component templ.Component) string {
+	var buf bytes.Buffer
+	ctx := context.Background()
+	err := component.Render(ctx, &buf)
+	if err != nil {
+		return ""
 	}
-	return div
+	return buf.String()
 }
 
-func createInput(inputType, placeholder, className string) js.Value {
-	input := createElement("input")
-	input.Set("type", inputType)
-	input.Set("placeholder", placeholder)
-	if className != "" {
-		input.Set("className", className)
-	}
-	return input
-}
-
-// Dynamic UI Component Creation
-func createUserCard(username string, messageCount int) js.Value {
-	card := createDiv("user-card")
-
-	// Create avatar (colored circle with initial)
-	avatar := createDiv("user-avatar")
-	initial := "?"
-	if len(username) > 0 {
-		initial = string(username[0])
-	}
-	avatar.Set("textContent", initial)
-
-	// Create user info
-	info := createDiv("user-info")
-
-	nameDiv := createDiv("user-name")
-	nameDiv.Set("textContent", username)
-
-	countDiv := createDiv("user-count")
-	countDiv.Set("textContent", strconv.Itoa(messageCount)+" messages")
-
-	info.Call("appendChild", nameDiv)
-	info.Call("appendChild", countDiv)
-
-	card.Call("appendChild", avatar)
-	card.Call("appendChild", info)
-
-	return card
-}
-
-func renderTemplToString(component interface{}) string {
-	// This would work with templ components, but for now let's use a simpler approach
-	// var buf bytes.Buffer
-	// ctx := context.Background()
-	// component.Render(ctx, &buf)
-	// return buf.String()
-
-	// Fallback to manual HTML generation for now
-	return ""
-}
 func updateStatsDisplay() {
 	document := js.Global().Get("document")
 	statsContent := document.Call("getElementById", "statsContent")
@@ -108,35 +42,22 @@ func updateStatsDisplay() {
 	// Clear existing content
 	statsContent.Set("innerHTML", "")
 
-	// Create overview section
-	overviewDiv := createDiv("bg-surface1 rounded-lg p-4 border border-surface2")
-	overviewTitle := createElement("h3")
-	overviewTitle.Set("className", "text-lg font-semibold text-text mb-3")
-	overviewTitle.Set("textContent", "Overview")
-	overviewDiv.Call("appendChild", overviewTitle)
+	// Create overview section HTML
+	overviewHTML := `<div class="bg-surface1 rounded-lg p-4 border border-surface2">
+		<h3 class="text-lg font-semibold text-text mb-3">Overview</h3>
+		<div class="grid grid-cols-2 gap-4">`
 
-	// Stats grid
-	statsGrid := createDiv("grid grid-cols-2 gap-4")
+	// Add stats cards using templ components
+	totalMessagesCard := renderTemplToString(StatsCard("Total Messages", strconv.Itoa(len(messages)), "text-blue"))
+	activeUsersCard := renderTemplToString(StatsCard("Active Users", strconv.Itoa(len(messageStats)), "text-green"))
 
-	// Total messages
-	totalCard := createStatsCard("Total Messages", strconv.Itoa(len(messages)), "text-blue")
-	statsGrid.Call("appendChild", totalCard)
+	overviewHTML += totalMessagesCard + activeUsersCard + `</div></div>`
 
-	// Active users
-	activeUsersCard := createStatsCard("Active Users", strconv.Itoa(len(messageStats)), "text-green")
-	statsGrid.Call("appendChild", activeUsersCard)
-	overviewDiv.Call("appendChild", statsGrid)
-	statsContent.Call("appendChild", overviewDiv)
-
-	// User breakdown section
+	// Add user breakdown section
 	if len(messageStats) > 0 {
-		usersDiv := createDiv("bg-surface1 rounded-lg border border-surface2")
-		usersTitle := createElement("h3")
-		usersTitle.Set("className", "text-lg font-semibold text-text p-4 border-b border-surface2")
-		usersTitle.Set("textContent", "User Activity")
-		usersDiv.Call("appendChild", usersTitle)
-
-		usersList := createDiv("p-4 space-y-3")
+		overviewHTML += `<div class="bg-surface1 rounded-lg border border-surface2 mt-4">
+			<h3 class="text-lg font-semibold text-text p-4 border-b border-surface2">User Activity</h3>
+			<div class="p-4 space-y-3">`
 
 		// Sort users by message count
 		type userStat struct {
@@ -158,69 +79,14 @@ func updateStatsDisplay() {
 		}
 
 		for _, user := range sortedUsers {
-			userCard := createModernUserCard(user.name, user.count)
-			usersList.Call("appendChild", userCard)
+			userCard := renderTemplToString(UserCard(user.name, user.count))
+			overviewHTML += userCard
 		}
 
-		usersDiv.Call("appendChild", usersList)
-		statsContent.Call("appendChild", usersDiv)
+		overviewHTML += `</div></div>`
 	}
-}
 
-// Create modern stats card
-func createStatsCard(title, value, colorClass string) js.Value {
-	card := createDiv("bg-surface1 rounded-lg border border-surface2 p-4 text-center")
-
-	valueDiv := createElement("div")
-	valueDiv.Set("className", "text-2xl font-bold "+colorClass)
-	valueDiv.Set("textContent", value)
-
-	titleDiv := createElement("div")
-	titleDiv.Set("className", "text-sm text-subtext0 mt-1")
-	titleDiv.Set("textContent", title)
-
-	card.Call("appendChild", valueDiv)
-	card.Call("appendChild", titleDiv)
-
-	return card
-}
-
-// Create modern user card
-func createModernUserCard(username string, messageCount int) js.Value {
-	card := createDiv("flex items-center justify-between p-3 bg-surface1 border border-surface2 rounded-lg hover:bg-surface2 transition-colors")
-
-	// Left side with avatar and name
-	leftDiv := createDiv("flex items-center space-x-3")
-
-	// Create avatar using the same function as messages
-	avatar := createUserAvatar(username)
-
-	// Create name
-	nameDiv := createElement("div")
-	nameDiv.Set("className", "font-medium text-text")
-	nameDiv.Set("textContent", username)
-
-	leftDiv.Call("appendChild", avatar)
-	leftDiv.Call("appendChild", nameDiv)
-
-	// Right side with message count
-	rightDiv := createDiv("text-right")
-
-	countDiv := createElement("div")
-	countDiv.Set("className", "text-lg font-semibold text-text")
-	countDiv.Set("textContent", strconv.Itoa(messageCount))
-
-	labelDiv := createElement("div")
-	labelDiv.Set("className", "text-xs text-subtext0")
-	labelDiv.Set("textContent", "messages")
-
-	rightDiv.Call("appendChild", countDiv)
-	rightDiv.Call("appendChild", labelDiv)
-
-	card.Call("appendChild", leftDiv)
-	card.Call("appendChild", rightDiv)
-
-	return card
+	statsContent.Set("innerHTML", overviewHTML)
 }
 
 func toggleStats() {
@@ -432,85 +298,39 @@ func updateMessagesDisplay() {
 		return
 	}
 
-	messagesElement.Set("innerHTML", "")
-
+	// Build HTML string for all messages using templ components
+	var messagesHTML string
 	for _, msg := range messages {
-		messageDiv := createModernMessage(msg)
-		messagesElement.Call("appendChild", messageDiv)
+		messageHTML := renderTemplToString(MessageComponent(msg.Username, msg.Text, msg.Timestamp))
+		messagesHTML += messageHTML
 	}
 
+	messagesElement.Set("innerHTML", messagesHTML)
 	messagesElement.Set("scrollTop", messagesElement.Get("scrollHeight"))
 }
 
 func createModernMessage(msg Message) js.Value {
-	// Main message container with enhanced styling
-	messageDiv := createDiv("flex items-start space-x-4 mb-6 group hover:bg-surface1/50 p-4 rounded-xl transition-all duration-300 message-enter hover:scale-[1.01] hover:shadow-lg")
+	html := renderTemplToString(MessageComponent(msg.Username, msg.Text, msg.Timestamp))
 
-	// User avatar
-	avatar := createUserAvatar(msg.Username)
-	messageDiv.Call("appendChild", avatar)
+	// Create a temporary container to parse the HTML
+	document := js.Global().Get("document")
+	tempDiv := document.Call("createElement", "div")
+	tempDiv.Set("innerHTML", html)
 
-	// Message content container
-	contentDiv := createDiv("flex-1 min-w-0")
-
-	// Header with username and timestamp
-	headerDiv := createDiv("flex items-baseline space-x-2 mb-2")
-
-	usernameDiv := createElement("span")
-	usernameDiv.Set("className", "font-semibold text-text text-sm")
-	usernameDiv.Set("textContent", msg.Username)
-
-	timestampDiv := createElement("span")
-	timestampDiv.Set("className", "text-xs text-subtext0")
-	timestampDiv.Set("textContent", msg.Timestamp)
-
-	headerDiv.Call("appendChild", usernameDiv)
-	headerDiv.Call("appendChild", timestampDiv)
-
-	// Message bubble with enhanced chat-like styling
-	bubbleDiv := createDiv("bg-surface0 border border-surface2 rounded-2xl px-4 py-3 shadow-lg hover:shadow-xl hover:border-overlay0 hover:bg-surface1 transition-all duration-300 relative before:absolute before:left-[-8px] before:top-4 before:w-0 before:h-0 before:border-t-8 before:border-t-transparent before:border-b-8 before:border-b-transparent before:border-r-8 before:border-r-surface0")
-
-	textDiv := createElement("p")
-	textDiv.Set("className", "text-text text-base leading-relaxed m-0 font-medium")
-	textDiv.Set("textContent", msg.Text)
-
-	bubbleDiv.Call("appendChild", textDiv)
-
-	// Assemble the message
-	contentDiv.Call("appendChild", headerDiv)
-	contentDiv.Call("appendChild", bubbleDiv)
-	messageDiv.Call("appendChild", contentDiv)
-
-	return messageDiv
+	// Return the first child element
+	return tempDiv.Get("firstElementChild")
 }
 
 func createUserAvatar(username string) js.Value {
-	avatar := createDiv("w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg border-2 border-surface2 hover:scale-110 transition-transform duration-200")
+	html := renderTemplToString(UserAvatar(username, "w-12 h-12"))
 
-	// Generate a consistent Catppuccin color based on username
-	colors := []string{
-		"bg-mauve", "bg-blue", "bg-green", "bg-yellow",
-		"bg-red", "bg-pink", "bg-sapphire", "bg-teal",
-		"bg-peach", "bg-lavender", "bg-sky", "bg-maroon",
-	}
+	// Create a temporary container to parse the HTML
+	document := js.Global().Get("document")
+	tempDiv := document.Call("createElement", "div")
+	tempDiv.Set("innerHTML", html)
 
-	// Simple hash function to pick color consistently
-	hash := 0
-	for i := 0; i < len(username); i++ {
-		hash += int(username[i])
-	}
-	colorClass := colors[hash%len(colors)]
-
-	avatar.Get("classList").Call("add", colorClass)
-
-	// Set initial
-	initial := "?"
-	if len(username) > 0 {
-		initial = string(username[0])
-	}
-	avatar.Set("textContent", initial)
-
-	return avatar
+	// Return the first child element
+	return tempDiv.Get("firstElementChild")
 }
 
 func addWelcomeMessage() {
@@ -526,6 +346,66 @@ func addWelcomeMessage() {
 	saveToLocalStorage()
 }
 
+func addRandomMessages() {
+	// Random usernames
+	usernames := []string{
+		"Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry",
+		"Ivy", "Jack", "Kate", "Leo", "Maya", "Noah", "Olivia", "Pete",
+		"Quinn", "Ruby", "Sam", "Tara", "Uma", "Victor", "Wendy", "Xander",
+		"Yara", "Zoe", "Alex", "Blake", "Casey", "Drew", "Emery", "Finley",
+	}
+
+	// Random message templates
+	messageTemplates := []string{
+		"Hey everyone! 👋",
+		"How's everyone doing today?",
+		"Just finished a great project!",
+		"Anyone else excited about the weekend?",
+		"Coffee time! ☕",
+		"Working on something cool...",
+		"Beautiful day outside! ☀️",
+		"Just discovered this amazing chat app!",
+		"Quick question - anyone here?",
+		"Love the new design! 🎨",
+		"Testing this feature out...",
+		"Hope everyone is staying safe!",
+		"Such a productive day!",
+		"Anyone want to collaborate?",
+		"This chat is really smooth!",
+		"Great to see everyone here!",
+		"Just saying hello! 😊",
+		"Loving the dark theme!",
+		"Quick break from coding...",
+		"The stats feature is neat!",
+		"Random message time! 🎲",
+		"Everything looks so modern!",
+		"Nice work on the UI!",
+		"Chat bubbles look amazing!",
+		"The colors are perfect! 🌈",
+	}
+
+	// Generate 5 random messages
+	for i := 0; i < 5; i++ {
+		// Pick random username and message
+		username := usernames[len(messages)%len(usernames)]
+		messageText := messageTemplates[len(messages)%len(messageTemplates)]
+
+		message := Message{
+			Username:  username,
+			Text:      messageText,
+			Timestamp: time.Now().Format("15:04:05"),
+		}
+
+		messages = append(messages, message)
+		messageStats[username]++
+	}
+
+	updateMessagesDisplay()
+	saveToLocalStorage()
+	updateStatsDisplay()
+	updateChart()
+}
+
 func main() {
 	c := make(chan struct{}, 0)
 
@@ -536,6 +416,11 @@ func main() {
 
 	js.Global().Set("clearMessages", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		clearMessages()
+		return nil
+	}))
+
+	js.Global().Set("addRandomMessages", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		addRandomMessages()
 		return nil
 	}))
 

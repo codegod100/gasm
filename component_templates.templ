@@ -2,17 +2,45 @@ package main
 
 import "strconv"
 
+// Helper function to generate consistent avatar color
+func getAvatarColor(username string) string {
+	colors := []string{
+		"bg-mauve", "bg-blue", "bg-green", "bg-yellow",
+		"bg-red", "bg-pink", "bg-sapphire", "bg-teal",
+		"bg-peach", "bg-lavender", "bg-sky", "bg-maroon",
+	}
+	
+	hash := 0
+	for i := 0; i < len(username); i++ {
+		hash += int(username[i])
+	}
+	return colors[hash%len(colors)]
+}
+
+// User avatar component
+templ UserAvatar(username string, size string) {
+	<div class={ "rounded-full text-white font-bold flex-shrink-0 shadow-lg border-2 border-surface2 hover:scale-110 transition-transform duration-200 flex items-center justify-center", size, getAvatarColor(username) }>
+		if len(username) > 0 {
+			{ string(username[0]) }
+		} else {
+			?
+		}
+	</div>
+}
+
+// Stats card component
+templ StatsCard(title, value, colorClass string) {
+	<div class="bg-surface1 rounded-lg border border-surface2 p-4 text-center">
+		<div class={ "text-2xl font-bold", colorClass }>{ value }</div>
+		<div class="text-sm text-subtext0 mt-1">{ title }</div>
+	</div>
+}
+
 // User card component
 templ UserCard(username string, messageCount int) {
 	<div class="flex items-center justify-between p-3 bg-surface1 border border-surface2 rounded-lg hover:bg-surface2 transition-colors">
 		<div class="flex items-center space-x-3">
-			<div class="w-8 h-8 rounded-full bg-mauve text-white flex items-center justify-center font-bold text-sm">
-				if len(username) > 0 {
-					{ string(username[0]) }
-				} else {
-					?
-				}
-			</div>
+			@UserAvatar(username, "w-8 h-8")
 			<div class="font-medium text-text">{ username }</div>
 		</div>
 		<div class="text-right">
@@ -20,6 +48,16 @@ templ UserCard(username string, messageCount int) {
 			<div class="text-xs text-subtext0">messages</div>
 		</div>
 	</div>
+}
+
+// Button component
+templ Button(text, className string) {
+	<button class={ className }>{ text }</button>
+}
+
+// Input component
+templ Input(inputType, placeholder, className, id string) {
+	<input type={ inputType } placeholder={ placeholder } class={ className } id={ id }/>
 }
 
 // Notification component
@@ -45,19 +83,13 @@ templ Notification(message, notificationType string) {
 // Message component
 templ MessageComponent(username, text, timestamp string) {
 	<div class="flex items-start space-x-4 mb-6 group hover:bg-surface1/50 p-4 rounded-xl transition-all duration-300 message-enter hover:scale-[1.01] hover:shadow-lg">
-		<div class="w-12 h-12 rounded-full bg-mauve text-white flex items-center justify-center font-bold shadow-lg border-2 border-surface2 hover:scale-110 transition-transform duration-200">
-			if len(username) > 0 {
-				{ string(username[0]) }
-			} else {
-				?
-			}
-		</div>
+		@UserAvatar(username, "w-12 h-12")
 		<div class="flex-1 min-w-0">
 			<div class="flex items-baseline space-x-2 mb-2">
 				<span class="font-semibold text-text text-sm">{ username }</span>
 				<span class="text-xs text-subtext0">{ timestamp }</span>
 			</div>
-			<div class="bg-surface0 border border-surface2 rounded-2xl px-4 py-3 shadow-lg hover:shadow-xl hover:border-overlay0 hover:bg-surface1 transition-all duration-300">
+			<div class="bg-surface0 border border-surface2 rounded-2xl px-4 py-3 shadow-lg hover:shadow-xl hover:border-overlay0 hover:bg-surface1 transition-all duration-300 relative before:absolute before:left-[-8px] before:top-4 before:w-0 before:h-0 before:border-t-8 before:border-t-transparent before:border-b-8 before:border-b-transparent before:border-r-8 before:border-r-surface0">
 				<p class="text-text text-base leading-relaxed m-0 font-medium">{ text }</p>
 			</div>
 		</div>
